@@ -4,3 +4,5 @@ tensorflow~=2.12.0
 numpy~=1.23.5
 Pillow~=9.5.0
 gevent~=22.10.2
+opencv-python-headless # For cv2, used in Grad-CAM image processing
+Werkzeug~=2.3.0 # Explicitly listing Werkzeug which Flask depends on, useful for version control

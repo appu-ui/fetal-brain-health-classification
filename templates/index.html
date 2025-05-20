@@ -1,26 +1,452 @@
 <!doctype html>
 <html>
   <head>
-    <title>Brain MRI Disease Prediction</title>
+    <title>Fetal Health Classification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      :root {
+        --sidebar-bg: rgba(255,255,255,0.8);
+        --sidebar-blur: 16px;
+        --sidebar-border: #e3eafc;
+        --sidebar-accent: #1976d2;
+        --sidebar-hover: #e3f2fd;
+        --main-bg: #eef2f7;
+        --card-bg: #fff;
+        --card-radius: 18px;
+        --card-shadow: 0 10px 25px rgba(0,0,0,0.09);
+        --primary: #1976d2;
+        --primary-dark: #0d47a1;
+        --success: #28a745;
+        --warning: #ffc107;
+        --danger: #dc3545;
+        --info: #007bff;
+      }
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: var(--main-bg);
+      }
+      body {
+        min-height: 100vh;
+        box-sizing: border-box;
+      }
+      .main-flex {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        min-height: 100vh;
+        gap: 32px;
+        padding: 32px 12px;
+      }
+      .sidebar {
+        flex: 0 0 270px;
+        max-width: 270px;
+        min-width: 220px;
+        margin-top: 12px;
+        position: sticky;
+        top: 32px;
+        height: fit-content;
+        background: var(--sidebar-bg);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px 0 rgba(31,38,135,0.10);
+        border: 1.5px solid var(--sidebar-border);
+        backdrop-filter: blur(var(--sidebar-blur));
+        transition: box-shadow 0.2s;
+      }
+      .sidebar:hover {
+        box-shadow: 0 12px 36px 0 rgba(25, 118, 210, 0.16);
+      }
+      .sidebar .info-box {
+        background: transparent;
+        border-left: 4px solid var(--sidebar-accent);
+        color: #222;
+        margin-bottom: 0;
+        padding: 24px 16px 16px 20px;
+        border-radius: 20px;
+      }
+      .sidebar .info-box strong {
+        color: var(--sidebar-accent);
+        font-size: 17px;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+      }
+      .sidebar ul {
+        list-style: none;
+        margin: 10px 0 0 0;
+        padding: 0;
+      }
+      .sidebar ul li {
+        margin-bottom: 10px;
+        padding: 8px 12px 8px 0;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        font-size: 15.2px;
+        transition: background 0.18s;
+        cursor: pointer;
+        position: relative;
+      }
+      .sidebar ul li:before {
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--sidebar-accent);
+        margin-right: 10px;
+        box-shadow: 0 0 6px 0 var(--sidebar-accent);
+        opacity: 0.7;
+      }
+      .sidebar ul li:hover {
+        background: var(--sidebar-hover);
+      }
+      .sidebar span {
+        display: block;
+        margin-top: 18px;
+        font-size: 13px;
+        color: #555;
+        line-height: 1.5;
+      }
+      .container {
+        background: var(--card-bg);
+        padding: 36px 42px 30px 42px;
+        border-radius: var(--card-radius);
+        box-shadow: var(--card-shadow);
+        width: 100%;
+        max-width: 570px;
+        text-align: center;
+        margin-top: 12px;
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 1;
+      }
+      .header {
+        margin-bottom: 32px;
+      }
+      .header h1 {
+        color: var(--primary);
+        font-size: 26px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        letter-spacing: 0.5px;
+      }
+      .header p {
+        color: #666;
+        font-size: 15px;
+        margin-top: 0;
+      }
+      .file-input-wrapper {
+        margin: 22px 0 18px 0;
+        padding: 14px;
+        border: 2px dashed var(--primary);
+        border-radius: 10px;
+        background-color: #f8f9fa;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      .file-input-wrapper:hover {
+        background-color: #e3f2fd;
+      }
+      .file-input-wrapper input[type="file"] {
+        display: none;
+      }
+      .file-input-label {
+        color: var(--primary);
+        font-weight: 500;
+        font-size: 16px;
+        letter-spacing: 0.2px;
+      }
+      #file-name-display {
+        margin-top: 8px;
+        font-size: 13.5px;
+        color: #555;
+        font-style: italic;
+      }
+      select {
+        margin: 10px 0 22px 0;
+        padding: 13px 14px;
+        border: 1.5px solid #ced4da;
+        border-radius: 9px;
+        width: 100%;
+        box-sizing: border-box;
+        background-color: #fff;
+        font-size: 16px;
+        color: #495057;
+        appearance: none;
+        background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%208l5%205%205-5z%22%20fill%3D%22%23495057%22%2F%3E%3C%2Fsvg%3E');
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        background-size: 13px;
+        transition: border-color 0.2s;
+      }
+      select:focus {
+        border-color: var(--primary);
+        outline: none;
+      }
+      .submit-btn {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        padding: 15px 0;
+        border-radius: 9px;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.08s;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 2px 8px rgba(25,118,210,0.07);
+      }
+      .submit-btn:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-1px) scale(1.01);
+      }
+      .submit-btn:active {
+        transform: translateY(0px) scale(0.98);
+      }
+      #loader {
+        margin: 22px auto 0 auto;
+        text-align: center;
+      }
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid var(--primary);
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px auto;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      #loader p {
+        font-size: 15px;
+        color: #555;
+      }
+      #result {
+        margin-top: 32px;
+        font-size: 16px;
+        text-align: left;
+      }
+      #result h2 {
+        color: var(--success);
+        font-size: 21px;
+        margin-bottom: 8px;
+        text-align: center;
+      }
+      #result p {
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+      #result p.error {
+        color: var(--danger);
+        font-weight: bold;
+        text-align: center;
+      }
+      .curability-info {
+        background: #fffbe8;
+        border-left: 4px solid var(--warning);
+        color: #856404;
+        border-radius: 10px;
+        padding: 13px 15px;
+        margin-top: 15px;
+        margin-bottom: 0;
+      }
+      .disease-info {
+        background: #e6f7ff;
+        border-left: 4px solid var(--info);
+        color: #004085;
+        border-radius: 10px;
+        padding: 13px 15px;
+        margin-bottom: 0;
+      }
+      #gradcam {
+        margin-top: 25px;
+        text-align: center;
+      }
+      #gradcam h3 {
+        color: #333;
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+      #gradcam img {
+        max-width: 100%;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      }
+      .disclaimer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+        text-align: left;
+        font-size: 13.5px;
+        color: #666;
+      }
+      .disclaimer h2 {
+        font-size: 16px;
+        color: #555;
+        margin-bottom: 10px;
+      }
+      .disclaimer p {
+        line-height: 1.5;
+        margin-bottom: 10px;
+      }
+      @media (max-width: 1100px) {
+        .main-flex {
+          gap: 12px;
+        }
+        .sidebar {
+          min-width: 180px;
+          max-width: 200px;
+          font-size: 14px;
+        }
+      }
+      @media (max-width: 900px) {
+        .main-flex {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 0;
+          padding: 10px;
+        }
+        .sidebar {
+          max-width: 100%;
+          min-width: 0;
+          margin-bottom: 20px;
+          position: static;
+        }
+      }
+      @media (max-width: 600px) {
+        .container {
+          padding: 20px 4vw;
+        }
+        .sidebar .info-box {
+          padding: 16px 7px 12px 10px;
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1>Upload Brain MRI Image</h1>
-    <form method="POST" action="/predict" enctype="multipart/form-data" id="upload-form">
-      <input type="file" name="file" accept="image/*" required>
-      <input type="submit" value="Predict">
-    </form>
-    <div id="result"></div>
+    <div class="main-flex">
+      <aside class="sidebar">
+        <div class="info-box">
+          <strong>Conditions Detected by This Tool</strong>
+          <ul>
+              <a href="https://www.ncbi.nlm.nih.gov/books/NBK431076/"><li>Anold-Chiari Malformation</li></a>
+            <li>Arachnoid Cyst</li>
+            <li>Cerebellar Hypoplasia</li>
+            <li>Colpocephaly</li>
+            <li>Encephalocele</li>
+            <li>Holoprosencephaly</li>
+            <li>Hydranencephaly</li>
+            <li>Intracranial Hemorrhage</li>
+            <li>Intracranial Tumor</li>
+            <li>M. Magna</li>
+            <li>Mild Ventriculomegaly</li>
+            <li>Moderate Ventriculomegaly</li>
+            <li>Normal</li>
+            <li>Polencephaly</li>
+            <li>Severe Ventriculomegaly</li>
+            <li>Vein of Galen</li>
+          </ul>
+        </div>
+      </aside>
+      <div class="container">
+        <div class="header">
+          <h1>Fetal Health Classifier</h1>
+          <p>Upload an ultrasound image to predict fetal health status.</p>
+        </div>
+        <form method="POST" action="/predict" enctype="multipart/form-data" id="upload-form" autocomplete="off">
+          <label for="file-upload" class="file-input-wrapper">
+            <span class="file-input-label">Click to Choose Ultrasound Image</span>
+            <input id="file-upload" type="file" name="file" accept="image/*" required>
+            <div id="file-name-display">No file chosen</div>
+          </label>
+          <select name="model_choice" required>
+            <option value="" disabled selected>Select Model for Analysis</option>
+            <option value="keras">CNN (General Purpose)</option>
+            <option value="keras1">Separable CNN (Efficient)</option>
+            <option value="keras2">Xception (High Accuracy & Grad-CAM)</option>
+          </select>
+          <button type="submit" class="submit-btn">
+            <span>&#x1F50E;</span>
+            Predict Health Status
+          </button>
+        </form>
+        <div id="loader" style="display: none;">
+          <div class="spinner"></div>
+          <p>Analyzing image, please wait...</p>
+        </div>
+        <div id="result"></div>
+        <div id="gradcam"></div>
+        <div class="disclaimer">
+          <h2>Important Disclaimer</h2>
+          <p><strong>For Informational & Research Purposes Only:</strong> This tool uses AI models to classify fetal health based on ultrasound images. The predictions provided are not a substitute for professional medical advice, diagnosis, or treatment.</p>
+          <p><strong>Not for Clinical Use:</strong> Do not use this tool for making medical decisions. Always consult with a qualified healthcare provider for any health concerns or before making any decisions related to your health or treatment.</p>
+          <p>The accuracy of the predictions can vary based on image quality and other factors. The creators of this tool are not liable for any actions taken based on its output.</p>
+        </div>
+      </div>
+    </div>
     <script>
-      // AJAX form submission to show result without reloading
-      document.getElementById('upload-form').onsubmit = async function(event) {
-        event.preventDefault();
-        const formData = new FormData(this);
-        const response = await fetch('/predict', { method: 'POST', body: formData });
-        const data = await response.json();
-        if (data.result) {
-          document.getElementById('result').innerHTML = `<h2>Prediction: ${data.result}</h2><p>Confidence: ${data.probability}</p>`;
+      const uploadForm = document.getElementById('upload-form');
+      const fileInput = document.getElementById('file-upload');
+      const fileNameDisplay = document.getElementById('file-name-display');
+      const resultDiv = document.getElementById('result');
+      const gradcamDiv = document.getElementById('gradcam');
+      const loaderDiv = document.getElementById('loader');
+      const modelSelect = document.querySelector('select[name="model_choice"]');
+
+      fileInput.addEventListener('change', function() {
+        if (this.files && this.files.length > 0) {
+          fileNameDisplay.textContent = this.files[0].name;
         } else {
-          document.getElementById('result').innerHTML = `<p style="color:red;">${data.error}</p>`;
+          fileNameDisplay.textContent = 'No file chosen';
+        }
+      });
+
+      uploadForm.onsubmit = async function(event) {
+        event.preventDefault();
+
+        resultDiv.innerHTML = '';
+        gradcamDiv.innerHTML = '';
+        loaderDiv.style.display = 'block';
+
+        const formData = new FormData(this);
+
+        try {
+          const response = await fetch('/predict', { method: 'POST', body: formData });
+          const data = await response.json();
+          if (response.ok && data.result) {
+            resultDiv.innerHTML = `
+              <h2>Prediction: ${data.result.replace(/-/g, ' ')}</h2>
+              <p>Confidence Score: <strong>${(data.probability * 100).toFixed(1)}%</strong></p>
+              <div class="disease-info"><strong>About this condition:</strong><br>${data.disease_info || 'Information not available.'}</div>
+              <div class="curability-info"><strong>Curability/Treatability:</strong><br>${data.curability || 'Information not available.'}</div>
+            `;
+            if (data.gradcam_image && modelSelect.value === 'keras2') {
+              gradcamDiv.innerHTML = `
+                <h3>Grad-CAM Visualization (Xception Model)</h3>
+                <img src="data:image/png;base64,${data.gradcam_image}" alt="Grad-CAM Visualization">
+              `;
+            }
+          } else if (data.error) {
+            resultDiv.innerHTML = `<p class='error'>Error: ${data.error}</p>`;
+          } else {
+            resultDiv.innerHTML = `<p class='error'>An unknown error occurred. Please try again.</p>`;
+          }
+        } catch (error) {
+          console.error('Fetch error:', error);
+          resultDiv.innerHTML = `<p class='error'>Failed to connect to the server. Please check your connection and try again.</p>`;
+        } finally {
+          loaderDiv.style.display = 'none';
         }
       };
     </script>
