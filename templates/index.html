@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Fetal Health Classification</title>
+    <title>Fetal brain Health Classification</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
       :root {
@@ -332,15 +332,68 @@
           padding: 16px 7px 12px 10px;
         }
       }
+      /* Add a simple sign-out button style */
+      .signout-btn {
+        display: inline-block;
+        margin: 0 0 18px 0;
+        background: #fff;
+        color: var(--danger);
+        border: 1.5px solid var(--danger);
+        border-radius: 7px;
+        padding: 8px 22px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.18s, color 0.18s;
+        float: right;
+      }
+      .signout-btn:hover {
+        background: var(--danger);
+        color: #fff;
+      }
     </style>
+    <!-- Firebase scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   </head>
   <body>
+    <script>
+      // Firebase config
+      const firebaseConfig = {
+        apiKey: "AIzaSyBkyexIXg-crTfjhcIsLPV5am86kzEu3O0",
+        authDomain: "appu-b7f40.firebaseapp.com",
+        projectId: "appu-b7f40",
+        storageBucket: "appu-b7f40.appspot.com",
+        messagingSenderId: "679205974016",
+        appId: "1:679205974016:web:09b3c023659178e061e8e5",
+        measurementId: "G-XFYPSTG20D"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+
+      // Redirect to auth.html if not signed in
+      auth.onAuthStateChanged(user => {
+        if (!user) {
+          window.location.href = "auth.html";
+        } else {
+          // Optionally show user info or sign out button
+          document.getElementById('user-email').textContent = user.email;
+          document.getElementById('signout-btn').style.display = 'inline-block';
+        }
+      });
+
+      function signOut() {
+        auth.signOut().then(() => {
+          window.location.href = "auth.html";
+        });
+      }
+    </script>
     <div class="main-flex">
       <aside class="sidebar">
         <div class="info-box">
           <strong>Conditions Detected by This Tool</strong>
           <ul>
-              <a href="https://www.ncbi.nlm.nih.gov/books/NBK431076/"><li>Anold-Chiari Malformation</li></a>
+            <a href="https://www.ncbi.nlm.nih.gov/books/NBK431076/"><li>Anold-Chiari Malformation</li></a>
             <li>Arachnoid Cyst</li>
             <li>Cerebellar Hypoplasia</li>
             <li>Colpocephaly</li>
@@ -360,9 +413,13 @@
         </div>
       </aside>
       <div class="container">
+        <button id="signout-btn" class="signout-btn" style="display:none;" onclick="signOut()">Sign Out</button>
+        <div style="text-align:right; font-size:13px; color:#555; margin-bottom:8px;">
+          Signed in as <span id="user-email"></span>
+        </div>
         <div class="header">
-          <h1>Fetal Health Classifier</h1>
-          <p>Upload an ultrasound image to predict fetal health status.</p>
+          <h1>Fetal Brain Health Classification</h1>
+          <p>Upload a fetal ultrasound image to predict fetal health status.</p>
         </div>
         <form method="POST" action="/predict" enctype="multipart/form-data" id="upload-form" autocomplete="off">
           <label for="file-upload" class="file-input-wrapper">
@@ -450,5 +507,6 @@
         }
       };
     </script>
+
   </body>
 </html>

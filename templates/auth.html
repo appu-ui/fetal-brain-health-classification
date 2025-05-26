@@ -1,0 +1,189 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Sign In - Fetal Brain Health</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Firebase CDN scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <style>
+      body {
+        background: linear-gradient(135deg, #e3f2fd 0%, #fff 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        font-family: 'Segoe UI', Arial, sans-serif;
+      }
+      .auth-card {
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 8px 32px rgba(25,118,210,0.10), 0 1.5px 8px rgba(25,118,210,0.06);
+        padding: 36px 28px 24px 28px;
+        max-width: 370px;
+        width: 100%;
+        text-align: center;
+      }
+      .auth-card h2 {
+        color: #1976d2;
+        margin-bottom: 18px;
+        font-size: 1.5rem;
+      }
+      .form-group {
+        position: relative;
+        margin-bottom: 22px;
+        width: 100%;
+      }
+      .form-group input {
+        width: 100%;
+        padding: 13px 10px 13px 12px;
+        border: 1.7px solid #bfc9d9;
+        border-radius: 7px;
+        font-size: 16px;
+        background: #f7fafd;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        outline: none;
+      }
+      .form-group input:focus {
+        border-color: #1976d2;
+        box-shadow: 0 0 0 1.5px #1976d2;
+      }
+      .form-group label {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #fff;
+        color: #8a99b3;
+        font-size: 15px;
+        pointer-events: none;
+        transition: 0.2s;
+        padding: 0 2px;
+      }
+      .form-group input:focus + label,
+      .form-group input:not(:placeholder-shown):not(:focus) + label {
+        top: -9px;
+        left: 10px;
+        font-size: 13px;
+        color: #1976d2;
+        background: #e3f2fd;
+        padding: 0 6px;
+        border-radius: 3px;
+      }
+      .auth-btn-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+      .auth-btn {
+        flex: 1;
+        background: linear-gradient(90deg,#1976d2 0%,#42a5f5 100%);
+        color: #fff;
+        border: none;
+        padding: 12px 0;
+        border-radius: 7px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.18s, transform 0.12s;
+        box-shadow: 0 2px 8px rgba(25,118,210,0.06);
+        outline: none;
+      }
+      .auth-btn:hover {
+        background: linear-gradient(90deg,#1565c0 0%,#1976d2 100%);
+        transform: translateY(-2px) scale(1.03);
+      }
+      .auth-status {
+        margin: 14px 0 0 0;
+        color: #1976d2;
+        font-size: 15px;
+        min-height: 22px;
+        text-align: center;
+      }
+      .auth-error {
+        color: #dc3545;
+        font-weight: 500;
+      }
+      .auth-success {
+        color: #28a745;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="auth-card">
+      <h2>Sign In / Sign up</h2>
+      <form id="auth-form" onsubmit="return false;">
+        <div class="form-group">
+          <input type="email" id="email" required autocomplete="username" placeholder=" " />
+          <label for="email">Email</label>
+        </div>
+        <div class="form-group">
+          <input type="password" id="password" required autocomplete="current-password" minlength="6" placeholder=" " />
+          <label for="password">Password</label>
+        </div>
+        <div class="auth-btn-row">
+          <button class="auth-btn" onclick="signUp()">Create Account</button>
+          <button class="auth-btn" onclick="signIn()">Sign In</button>
+        </div>
+        <div class="auth-status" id="auth-status"></div>
+      </form>
+    </div>
+    <script>
+      // Firebase config
+      const firebaseConfig = {
+        apiKey: "AIzaSyBkyexIXg-crTfjhcIsLPV5am86kzEu3O0",
+        authDomain: "appu-b7f40.firebaseapp.com",
+        projectId: "appu-b7f40",
+        storageBucket: "appu-b7f40.appspot.com",
+        messagingSenderId: "679205974016",
+        appId: "1:679205974016:web:09b3c023659178e061e8e5",
+        measurementId: "G-XFYPSTG20D"
+      };
+      firebase.initializeApp(firebaseConfig);
+      firebase.analytics();
+      const auth = firebase.auth();
+
+      // Redirect if already signed in
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          window.location.href = "/";
+        }
+      });
+
+      function signUp() {
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        document.getElementById('auth-status').textContent = '';
+        auth.createUserWithEmailAndPassword(email, password)
+          .then(() => {
+            document.getElementById('auth-status').textContent = "Account created! Redirecting...";
+            document.getElementById('auth-status').className = "auth-status auth-success";
+            setTimeout(() => window.location.href = "/", 800);
+          })
+          .catch((error) => {
+            document.getElementById('auth-status').textContent = error.message;
+            document.getElementById('auth-status').className = "auth-status auth-error";
+          });
+      }
+
+      function signIn() {
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        document.getElementById('auth-status').textContent = '';
+        auth.signInWithEmailAndPassword(email, password)
+          .then(() => {
+            document.getElementById('auth-status').textContent = "Signed in! Redirecting...";
+            document.getElementById('auth-status').className = "auth-status auth-success";
+            setTimeout(() => window.location.href = "/", 800);
+          })
+          .catch((error) => {
+            document.getElementById('auth-status').textContent = error.message;
+            document.getElementById('auth-status').className = "auth-status auth-error";
+          });
+      }
+    </script>
+  </body>
+</html>

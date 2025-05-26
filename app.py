@@ -4,6 +4,8 @@ import base64
 from flask import Flask, request, render_template, jsonify
 from werkzeug.utils import secure_filename
 from gevent.pywsgi import WSGIServer
+from flask import Flask
+
 
 import numpy as np
 from PIL import Image
@@ -101,6 +103,7 @@ disease_explanations = {
 
 app = Flask(__name__)
 
+
 MODEL_PATHS = {
     "keras": "models/best_model.keras",
     "keras1": "models/best_model1.keras",
@@ -190,11 +193,13 @@ def pil_image_to_base64(img):
     img_str = base64.b64encode(buffered.getvalue()).decode()
     return img_str
 
-
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
 
+@app.route('/auth.html', methods=['GET'])
+def auth():
+    return render_template('auth.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -231,7 +236,6 @@ def predict():
         curability=explanation["curability"],
         gradcam_image=gradcam_b64  # This will be None if not "keras2"
     )
-
 
 if __name__ == '__main__':
     # Make sure 'templates' directory exists and 'index.html' is inside it.
