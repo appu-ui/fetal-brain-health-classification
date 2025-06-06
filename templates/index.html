@@ -110,11 +110,11 @@
       }
       .container {
         background: var(--card-bg);
-        padding: 36px 42px 30px 42px;
+        padding: 48px 60px 40px 60px;
         border-radius: var(--card-radius);
         box-shadow: var(--card-shadow);
         width: 100%;
-        max-width: 570px;
+        max-width: 800px;
         text-align: center;
         margin-top: 12px;
         margin-bottom: 20px;
@@ -481,6 +481,7 @@
         try {
           const response = await fetch('/predict', { method: 'POST', body: formData });
           const data = await response.json();
+
           if (response.ok && data.result) {
             resultDiv.innerHTML = `
               <h2>Prediction: ${data.result.replace(/-/g, ' ')}</h2>
@@ -488,12 +489,101 @@
               <div class="disease-info"><strong>About this condition:</strong><br>${data.disease_info || 'Information not available.'}</div>
               <div class="curability-info"><strong>Curability/Treatability:</strong><br>${data.curability || 'Information not available.'}</div>
             `;
-            if (data.gradcam_image && modelSelect.value === 'keras2') {
-              gradcamDiv.innerHTML = `
-                <h3>Grad-CAM Visualization (Xception Model)</h3>
-                <img src="data:image/png;base64,${data.gradcam_image}" alt="Grad-CAM Visualization">
-              `;
+
+                   if (data.gradcam_image && (modelSelect.value === 'keras2' || modelSelect.value === 'keras' || modelSelect.value === 'keras1')) {
+          gradcamDiv.innerHTML = `
+            <h3>Grad-CAM Visualization (${modelSelect.options[modelSelect.selectedIndex].text})</h3>
+
+            <!-- Container with image on left and legend on right -->
+            <div style="display: flex; align-items: flex-start; gap: 20px; margin-bottom: 16px;">
+
+              <!-- Grad-CAM Image -->
+              <div style="flex: 1;">
+                <img src="data:image/png;base64,${data.gradcam_image}" alt="Grad-CAM Visualization" style="max-width: 100%; height: auto;">
+              </div>
+
+              <!-- Legend on the right side -->
+              <div style="min-width: 200px; background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                <strong>Grad-CAM Color Legend</strong>
+                <div style="margin-top: 10px;">
+                  <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <div style="width: 20px; height: 15px; background: #dc3545; border-radius: 3px; border: 1px solid #bbb; margin-right: 8px;"></div>
+                    <span style="font-size: 13px;">Maximum</span>
+                  </div>
+                  <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <div style="width: 20px; height: 15px; background: #ffc107; border-radius: 3px; border: 1px solid #bbb; margin-right: 8px;"></div>
+                    <span style="font-size: 13px;">High</span>
+                  </div>
+                  <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <div style="width: 20px; height: 15px; background: #28a745; border-radius: 3px; border: 1px solid #bbb; margin-right: 8px;"></div>
+                    <span style="font-size: 13px;">Moderate</span>
+                  </div>
+                  <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <div style="width: 20px; height: 15px; background: #007bff; border-radius: 3px; border: 1px solid #bbb; margin-right: 8px;"></div>
+                    <span style="font-size: 13px;">Low</span>
+                  </div>
+                  <div style="display: flex; align-items: center;">
+                    <div style="width: 20px; height: 15px; background: #00008b; border-radius: 3px; border: 1px solid #bbb; margin-right: 8px;"></div>
+                    <span style="font-size: 13px;">Very Low</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Explanation text below -->
+            <div style="font-size: 13.5px; color: #444; margin-top: 8px; text-align: left;">
+              <strong>How to read this:</strong><br>
+              <span>
+                <b>Red</b> areas indicate the regions most critical for the model's prediction (maximum importance).
+                <b>Yellow</b> and <b>orange</b> areas are also highly important.<br>
+                <b>Green</b> areas are moderately important.<br>
+                <b>Blue</b> and <b>dark blue</b> areas have little or no influence on the model's decision.<br>
+                The more intense and warm the color, the higher the model's attention to that region.
+              </span>
+            </div>
+          `;
+
+  // Continue with color percentages and AI analysis sections...
+
+
+              // ADD COLOR PERCENTAGES DISPLAY
+              if (data.color_percentages) {
+                gradcamDiv.innerHTML += `
+                  <div style="margin-top:16px; text-align:left; background:#f8f9fa; padding:12px; border-radius:8px; border:1px solid #ddd;">
+                    <strong>📊 Diagnosis of fetal brain using Color Percentage Analysis</strong>
+                    <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px;">
+                      <div style="display:flex; align-items:center; gap:5px;">
+                        <div style="width:20px;height:20px;background:#dc3545;border-radius:3px;border:1px solid #ccc;"></div>
+                        <span>Red: ${data.color_percentages.red.toFixed(1)}%</span>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:5px;">
+                        <div style="width:20px;height:20px;background:#ffc107;border-radius:3px;border:1px solid #ccc;"></div>
+                        <span>Yellow: ${data.color_percentages.yellow.toFixed(1)}%</span>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:5px;">
+                        <div style="width:20px;height:20px;background:#28a745;border-radius:3px;border:1px solid #ccc;"></div>
+                        <span>Green: ${data.color_percentages.green.toFixed(1)}%</span>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:5px;">
+                        <div style="width:20px;height:20px;background:#007bff;border-radius:3px;border:1px solid #ccc;"></div>
+                        <span>Blue: ${data.color_percentages.blue.toFixed(1)}%</span>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }
+
+              // ADD AI ANALYSIS DISPLAY
+              if (data.ai_analysis) {
+                gradcamDiv.innerHTML += `
+                  <div style="margin-top:16px; background:#f0f8ff; padding:12px; border-radius:8px; border:1px solid #cce7ff;">
+                    <strong>${data.ai_analysis.includes('🤖') ? '' : '🤖 '}GradCAM Analysis</strong>
+                    <p style="margin-top:8px; font-size:14px; line-height:1.5; margin-bottom:0;">${data.ai_analysis}</p>
+                  </div>
+                `;
+              }
             }
+
           } else if (data.error) {
             resultDiv.innerHTML = `<p class='error'>Error: ${data.error}</p>`;
           } else {
@@ -506,7 +596,6 @@
           loaderDiv.style.display = 'none';
         }
       };
-    </script>
-
+</script>
   </body>
 </html>

@@ -13,7 +13,190 @@ import cv2
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
-# Your class names
+import os
+import io
+import base64
+from flask import Flask, request, render_template, jsonify
+from werkzeug.utils import secure_filename
+from gevent.pywsgi import WSGIServer
+from flask import Flask
+
+import numpy as np
+from PIL import Image
+import cv2
+import tensorflow as tf
+from tensorflow.keras.models import load_model
+
+# >>> ADD THESE FUNCTIONS HERE <<<
+import requests
+import warnings
+
+warnings.filterwarnings("ignore")
+
+
+def analyze_gradcam_smart(gradcam_img, prediction, color_percentages):
+    """Smart rule-based AI analysis - works without external APIs"""
+    try:
+        medical_insights = {
+            'intracranial-tumor': {
+                'high_red': 'High activation regions indicate potential tumor mass locations with significant diagnostic importance.',
+                'high_yellow': 'Moderate activation suggests tumor margins or surrounding edema areas.',
+                'high_green': 'Low activation in normal brain tissue, indicating preserved healthy regions.',
+                'high_blue': 'Minimal activation in background areas, as expected in tumor cases.'
+            },
+            'normal': {
+                'high_red': 'Unexpected high activation may indicate false positive regions requiring review.',
+                'high_yellow': 'Moderate activation in normal anatomical structures.',
+                'high_green': 'Standard brain tissue activation patterns within normal limits.',
+                'high_blue': 'Background regions showing expected minimal activation.'
+            },
+            'intracranial-hemorrdge': {
+                'high_red': 'Critical activation indicating hemorrhage location and extent.',
+                'high_yellow': 'Moderate activation around bleeding areas or hematoma margins.',
+                'high_green': 'Low activation in unaffected brain regions.',
+                'high_blue': 'Background areas with minimal diagnostic significance.'
+            },
+            'mild-ventriculomegaly': {
+                'high_red': 'High activation in ventricular regions indicating enlarged ventricles.',
+                'high_yellow': 'Moderate activation around ventricular margins.',
+                'high_green': 'Low activation in normal brain parenchyma.',
+                'high_blue': 'Background regions with minimal diagnostic relevance.'
+            },
+            'moderate-ventriculomegaly': {
+                'high_red': 'High activation in moderately enlarged ventricular system.',
+                'high_yellow': 'Moderate activation around ventricular boundaries.',
+                'high_green': 'Low activation in surrounding brain tissue.',
+                'high_blue': 'Background areas with minimal diagnostic importance.'
+            },
+            'severe-ventriculomegaly': {
+                'high_red': 'Critical activation indicating severely enlarged ventricular system.',
+                'high_yellow': 'Moderate activation around distended ventricles.',
+                'high_green': 'Low activation in compressed brain tissue.',
+                'high_blue': 'Background areas showing minimal activation.'
+            },
+            'anold-chiari-malformation': {
+                'high_red': 'High activation in cerebellar and brainstem regions indicating malformation.',
+                'high_yellow': 'Moderate activation around posterior fossa structures.',
+                'high_green': 'Low activation in normal cerebral regions.',
+                'high_blue': 'Background areas with minimal diagnostic relevance.'
+            },
+            'arachnoid-cyst': {
+                'high_red': 'High activation indicating cyst location and mass effect.',
+                'high_yellow': 'Moderate activation around cyst margins.',
+                'high_green': 'Low activation in normal brain parenchyma.',
+                'high_blue': 'Background regions showing minimal activation.'
+            },
+            'cerebellah-hypoplasia': {
+                'high_red': 'High activation in underdeveloped cerebellar regions.',
+                'high_yellow': 'Moderate activation around affected cerebellar areas.',
+                'high_green': 'Low activation in preserved brain structures.',
+                'high_blue': 'Background areas with minimal diagnostic significance.'
+            },
+            'colphocephaly': {
+                'high_red': 'High activation in enlarged occipital horns of lateral ventricles.',
+                'high_yellow': 'Moderate activation around ventricular abnormalities.',
+                'high_green': 'Low activation in normal brain regions.',
+                'high_blue': 'Background areas showing minimal activation.'
+            },
+            'encephalocele': {
+                'high_red': 'High activation indicating brain tissue herniation through skull defect.',
+                'high_yellow': 'Moderate activation around herniated brain tissue.',
+                'high_green': 'Low activation in normal intracranial structures.',
+                'high_blue': 'Background regions with minimal diagnostic importance.'
+            },
+            'holoprosencephaly': {
+                'high_red': 'High activation in undivided forebrain structures.',
+                'high_yellow': 'Moderate activation around malformed brain regions.',
+                'high_green': 'Low activation in preserved brain tissue.',
+                'high_blue': 'Background areas with minimal diagnostic relevance.'
+            },
+            'hydracenphaly': {
+                'high_red': 'High activation in fluid-filled spaces replacing cerebral hemispheres.',
+                'high_yellow': 'Moderate activation around preserved brain structures.',
+                'high_green': 'Low activation in remaining brain tissue.',
+                'high_blue': 'Background regions showing minimal activation.'
+            },
+            'm-magna': {
+                'high_red': 'High activation in enlarged cisterna magna region.',
+                'high_yellow': 'Moderate activation around posterior fossa structures.',
+                'high_green': 'Low activation in normal cerebellar regions.',
+                'high_blue': 'Background areas with minimal diagnostic significance.'
+            },
+            'polencephaly': {
+                'high_red': 'High activation indicating cystic cavities within brain parenchyma.',
+                'high_yellow': 'Moderate activation around porencephalic cysts.',
+                'high_green': 'Low activation in preserved brain tissue.',
+                'high_blue': 'Background regions with minimal diagnostic importance.'
+            },
+            'vein-of-galen': {
+                'high_red': 'High activation indicating vascular malformation in deep brain structures.',
+                'high_yellow': 'Moderate activation around abnormal vascular connections.',
+                'high_green': 'Low activation in normal brain parenchyma.',
+                'high_blue': 'Background areas showing minimal activation.'
+            }
+        }
+
+        # Determine dominant activation pattern
+        dominant_color = max(color_percentages, key=color_percentages.get)
+        activation_level = 'high' if color_percentages[dominant_color] > 25 else 'moderate'
+        pattern_key = f"{activation_level}_{dominant_color}"
+
+        # Get medical insight
+        condition_insights = medical_insights.get(prediction, {})
+        analysis = condition_insights.get(pattern_key, f"Standard {dominant_color} activation pattern observed.")
+
+        # Enhanced analysis
+        confidence_level = 'high' if color_percentages['red'] > 30 else 'moderate'
+        detailed_analysis = f"{analysis} Primary activation in {dominant_color} regions ({color_percentages[dominant_color]:.1f}%) indicates {confidence_level} diagnostic confidence for {prediction.replace('-', ' ')}."
+
+        return detailed_analysis
+
+    except Exception as e:
+        return f"AI analysis error: {str(e)}"
+
+
+def get_color_percentages(pil_image):
+    # Convert PIL Image to OpenCV format (BGR)
+    img = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    total_pixels = img.shape[0] * img.shape[1]
+
+    # Define color ranges in HSV
+    lower_red1 = np.array([0, 50, 50])
+    upper_red1 = np.array([10, 255, 255])
+    lower_red2 = np.array([170, 50, 50])
+    upper_red2 = np.array([180, 255, 255])
+
+    lower_green = np.array([50, 50, 50])
+    upper_green = np.array([70, 255, 255])
+
+    lower_yellow = np.array([18, 50, 50])
+    upper_yellow = np.array([30, 255, 255])
+
+    lower_blue = np.array([100, 50, 50])
+    upper_blue = np.array([120, 255, 255])
+
+    # Create masks for each color
+    mask_red1 = cv2.inRange(hsv, lower_red1, upper_red1)
+    mask_red2 = cv2.inRange(hsv, lower_red2, upper_red2)
+    mask_red = cv2.bitwise_or(mask_red1, mask_red2)
+    mask_green = cv2.inRange(hsv, lower_green, upper_green)
+    mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
+    mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
+
+    # Calculate percentages
+    percent_red = (cv2.countNonZero(mask_red) / total_pixels) * 100
+    percent_green = (cv2.countNonZero(mask_green) / total_pixels) * 100
+    percent_yellow = (cv2.countNonZero(mask_yellow) / total_pixels) * 100
+    percent_blue = (cv2.countNonZero(mask_blue) / total_pixels) * 100
+
+    return {
+        "red": percent_red,
+        "green": percent_green,
+        "yellow": percent_yellow,
+        "blue": percent_blue
+    }
+
 class_names = [
     "anold-chiari-malformation",
     "arachnoid-cyst",
@@ -105,8 +288,8 @@ app = Flask(__name__)
 
 
 MODEL_PATHS = {
-    "keras": "models/best_model.keras",
-    "keras1": "models/best_model1.keras",
+    "keras": "models/best_model31.keras",
+    "keras1": "models/best_model24.keras",
     "keras2": "models/best_model2.keras"
 }
 models = {name: load_model(path) for name, path in MODEL_PATHS.items()}
@@ -114,7 +297,7 @@ print('All models loaded. Check http://127.0.0.1:5000/')
 
 # You must update these names to match the last conv layer in your models!
 LAST_CONV_LAYER = {
-    "keras": "conv2d_11",  # CNN - Grad-CAM will NOT be generated for this
+    "keras": "conv2d_25",  # CNN - Grad-CAM will NOT be generated for this
     "keras1": "separable_conv2d_1",  # Separable CNN - Grad-CAM will NOT be generated for this
     "keras2": "block14_sepconv2"  # Xception default - Grad-CAM WILL be generated for this
 }
@@ -201,6 +384,7 @@ def index():
 def auth():
     return render_template('auth.html')
 
+
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'file' not in request.files:
@@ -211,31 +395,47 @@ def predict():
     if model_choice not in models:
         return jsonify({'error': 'Invalid model choice'}), 400
 
-    img = Image.open(file.stream)  # Load image using PIL
+    img = Image.open(file.stream)
     pred_class, pred_proba, pred_idx, x = model_predict(img, model_choice, models[model_choice])
     explanation = disease_explanations.get(pred_class, {"info": "No information available for this condition.",
                                                         "curability": "Unknown"})
 
-    gradcam_b64 = None  # Initialize to None
-
-    # Grad-CAM: Only for Xception model ("keras2")
-    if model_choice == 'keras2':
+    # Grad-CAM: For CNN ("keras") and Xception ("keras2")
+    if model_choice in ['keras', 'keras2', 'keras1']:
         last_conv = LAST_CONV_LAYER[model_choice]
         heatmap = make_gradcam_heatmap(x, models[model_choice], last_conv, pred_idx)
 
         # Overlay heatmap on input image (resize original to match model input)
-        # For Xception, input is RGB and resized to (299, 299)
-        vis_img = img.convert('RGB').resize((299, 299))  # Ensure vis_img is RGB for Xception
+        if model_choice == 'keras2':
+            vis_img = img.convert('RGB').resize((299, 299))
+        else:  # For CNN, input is grayscale and resized to (64, 64)
+            vis_img = img.convert('L').resize((299, 299))
+
         gradcam_img = overlay_heatmap(heatmap, vis_img)
+
+        # ADD NEW FEATURES HERE
+        color_percentages = get_color_percentages(gradcam_img)
+        try:
+            ai_explanation = analyze_gradcam_smart(gradcam_img, pred_class, color_percentages)
+        except Exception as e:
+            ai_explanation = "AI analysis temporarily unavailable"
+
         gradcam_b64 = pil_image_to_base64(gradcam_img)
+    else:
+        gradcam_b64 = None
+        color_percentages = None
+        ai_explanation = "AI analysis not available for this model"
 
     return jsonify(
         result=pred_class,
         probability=round(pred_proba, 3),
         disease_info=explanation["info"],
         curability=explanation["curability"],
-        gradcam_image=gradcam_b64  # This will be None if not "keras2"
+        gradcam_image=gradcam_b64,
+        color_percentages=color_percentages,  # ADD THIS
+        ai_analysis=ai_explanation  # ADD THIS
     )
+
 
 if __name__ == '__main__':
     # Make sure 'templates' directory exists and 'index.html' is inside it.
