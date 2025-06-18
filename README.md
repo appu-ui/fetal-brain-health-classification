@@ -1,32 +1,52 @@
-🧠 Fetal Brain Anomaly Detection Using Deep Learning
-This project leverages deep learning to classify fetal brain MRI images as normal or abnormal, assisting in the early detection of potential neurological issues. It features an intuitive web interface allowing users to upload images, select classification models, and receive detailed results with medical context.
+# 🧠 Fetal Brain Anomaly Detection Using Deep Learning
 
-🔍 Features
-🖼️ Upload and classify fetal brain MRI images
+This project aims to detect anomalies in fetal brain MRI images using deep learning techniques. It provides a web-based interface where users can upload MRI images, select a classification model, and receive detailed predictions along with a downloadable report.
 
-🧠 Detect and report anomalies in brain structure
+---
 
-🧪 Support for multiple deep learning models (e.g., CNN, Xception)
+## 📌 Features
 
-📊 View classification results with confidence scores
+- 📷 Upload fetal brain MRI images
+- 🤖 Classify images as Normal or Abnormal using trained deep learning models
+- 📄 Generate and download medical reports
+- 🔐 Secure user authentication (Sign up / Login)
+- 🧠 Select from multiple CNN-based models (e.g., Xception, ResNet)
+- ⚠️ Detect and reject invalid or non-MRI images
+- 📊 Display confidence scores and results
 
-📁 Downloadable PDF reports
+---
 
-🛡️ User authentication (Sign up / Login)
+## 🛠️ Tech Stack
 
-❌ Rejects non-MRI or irrelevant images
+| Component      | Technology              |
+|----------------|--------------------------|
+| Frontend       | HTML5, CSS3              |
+| Backend        | Python, Flask            |
+| Deep Learning  | TensorFlow/Keras         |
+| Image Handling | OpenCV, Pillow           |
+| Authentication | Firebase                 |
 
-📂 Session-based image log (optional)
 
-🧰 Tech Stack
-Frontend: HTML5, CSS3, Bootstrap
+---
 
-Backend: Python, Flask
+## 🚀 Getting Started
 
-Deep Learning: TensorFlow/Keras
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/appu-ui/fetal-brain-health-classification.git
+   cd fetal-brain-anomaly-detection
+2. Create a virtual environment and install dependencies:
+    ```bash
+   python -m venv venv
+   source venv/bin/activate  # Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+3.Run the Flask application:
+```bash
+  python app.py
+ 
 
-Image Processing: OpenCV, Pillow
 
-Authentication: Firebase or Flask-Login
 
-Deployment: (e.g., Heroku, AWS, or localhost)
+
+
+
