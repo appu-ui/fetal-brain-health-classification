@@ -39,8 +39,8 @@ This project focuses on the classification of fetal brain ultrasound images into
    source venv/bin/activate  # Windows: venv\Scripts\activate
    pip install -r requirements.txt
 3.Run the Flask application:
-```bash
-  python app.py
+   ```bash
+   python app.py
  ```
 
 
