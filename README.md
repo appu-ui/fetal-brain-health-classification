@@ -1,20 +1,18 @@
-# 🧠 Fetal Brain Anomaly Detection Using Deep Learning
+# 🧠 Fetal Brain Health Classification Using Deep Learning
 
-This project aims to detect anomalies in fetal brain MRI images using deep learning techniques. It provides a web-based interface where users can upload MRI images, select a classification model, and receive detailed predictions along with a downloadable report.
+This project focuses on the classification of fetal brain ultrasound images into 16 distinct categories using advanced deep learning models. It features a user-friendly web interface where users can securely upload ultrasound images, choose from various CNN architectures, and receive detailed predictions along with confidence scores and downloadable reports.
 
 ---
 
 ## 📌 Features
 
-- 📷 Upload fetal brain MRI images
-- 🤖 Classify images as Normal or Abnormal using trained deep learning models
-- 📄 Generate and download medical reports
-- 🔐 Secure user authentication (Sign up / Login)
-- 🧠 Select from multiple CNN-based models (e.g., Xception, ResNet)
-- ⚠️ Detect and reject invalid or non-MRI images
-- 📊 Display confidence scores and results
+- 🖼️ Upload fetal brain ultrasound images for classification  
+- 🧠 Classify images into 16 predefined categories using pre-trained deep learning models  
+- 🔒 Secure user authentication system (Sign Up / Login)  
+- ⚙️ Select from multiple CNN-based models such as Xception and Separable CNN  
+- 📈 View model prediction results with confidence scores  
+- 📝 Download a detailed classification report for each image  
 
----
 
 ## 🛠️ Tech Stack
 
@@ -43,7 +41,7 @@ This project aims to detect anomalies in fetal brain MRI images using deep learn
 3.Run the Flask application:
 ```bash
   python app.py
- 
+ ```
 
 
 
